@@ -38,41 +38,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['id'
 
         // 审核通过时，推送到 Rustracker
         $rustracker_result = '';
-        if ($new_status === 'approved' && RUSTRACKER_TOKEN !== '') {
-            if (!function_exists('curl_init')) {
-                $rustracker_result = 'Rustracker 推送不可用：服务器未安装 curl 扩展。';
-            } else {
-                $pdo = getDB();
-                $stmt = $pdo->prepare("SELECT info_hash FROM `$table` WHERE id = :id");
-                $stmt->execute([':id' => $id]);
-                $row = $stmt->fetch();
+        if ($new_status === 'approved') {
+            $pdo = getDB();
+            $stmt = $pdo->prepare("SELECT info_hash FROM `$table` WHERE id = :id");
+            $stmt->execute([':id' => $id]);
+            $row = $stmt->fetch();
 
-                if ($row && !empty($row['info_hash'])) {
-                    $ch = curl_init();
-                    curl_setopt_array($ch, [
-                        CURLOPT_URL            => RUSTRACKER_API,
-                        CURLOPT_POST           => true,
-                        CURLOPT_HTTPHEADER     => [
-                            'Authorization: Bearer ' . RUSTRACKER_TOKEN,
-                            'Content-Type: application/json',
-                        ],
-                        CURLOPT_POSTFIELDS     => json_encode(['info_hash' => $row['info_hash']]),
-                        CURLOPT_RETURNTRANSFER => true,
-                        CURLOPT_TIMEOUT        => 10,
-                        CURLOPT_CONNECTTIMEOUT => 5,
-                    ]);
-                    $response = curl_exec($ch);
-                    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                    $curl_error = curl_error($ch);
-                    curl_close($ch);
-
-                    if ($curl_error) {
-                        $rustracker_result = 'Rustracker 推送失败：' . $curl_error;
-                    } elseif ($http_code >= 200 && $http_code < 300) {
-                        $rustracker_result = '已推送至 Rustracker 黑名单';
-                    } else {
-                        $rustracker_result = 'Rustracker 返回 HTTP ' . $http_code . '：' . substr($response, 0, 200);
-                    }
+            if ($row && !empty($row['info_hash'])) {
+                $push = rustracker_push(RUSTRACKER_API, RUSTRACKER_TOKEN, $row['info_hash']);
+                if ($push['success']) {
+                    $rustracker_result = $push['added']
+                        ? '已推送至 Rustracker 黑名单'
+                        : '该 Info Hash 已在 Rustracker 黑名单中';
+                } else {
+                    $rustracker_result = 'Rustracker 推送失败：' . $push['error'];
                 }
             }
         }

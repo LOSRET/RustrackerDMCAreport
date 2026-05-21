@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh repo *)",
+      "Bash(gh api *)",
+      "PowerShell([System.Text.Encoding]::UTF8.GetString\\([System.Convert]::FromBase64String\\(\\(Get-Content temp_handlers_b64.txt -Raw\\)\\)\\) | Select-String -Pattern \"blacklist|Blacklist|add_blacklist|RemoveBlacklist|delete_blacklist|list_blacklist|get_blacklist\" -Context 2,5)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(gh api *)",
+      "PowerShell($paths=@\\('src/main.rs','src/server.rs','src/server/handlers.rs','README.md','README-zh.md','tests/tracker_http.rs'\\); foreach \\($p in $paths\\) { $c=gh api \"repos/LOSRET/Rustracker/contents/$p\" --jq '.content'; $text=[Text.Encoding]::UTF8.GetString\\([Convert]::FromBase64String\\($c\\)\\); $lines=$text -split \"`n\"; for\\($i=0;$i -lt $lines.Length;$i++\\){ if\\($lines[$i] -match 'blacklist'\\){ $start=[Math]::Max\\(0,$i-3\\); $end=[Math]::Min\\($lines.Length-1,$i+5\\); \"--- ${p}:$\\($i+1\\) ---\"; for\\($j=$start;$j -le $end;$j++\\){ \"{0}: {1}\" -f \\($j+1\\),$lines[$j] } } } })",
+      "PowerShell($p='src/server/handlers.rs'; $c=gh api \"repos/LOSRET/Rustracker/contents/$p\" --jq '.content'; $text=[Text.Encoding]::UTF8.GetString\\([Convert]::FromBase64String\\($c\\)\\); $lines=$text -split \"`n\"; for\\($i=0;$i -lt $lines.Length;$i++\\){ if\\($lines[$i] -match 'blacklist|FORBIDDEN|StatusCode::FORBIDDEN'\\){ $start=[Math]::Max\\(0,$i-4\\); $end=[Math]::Min\\($lines.Length-1,$i+8\\); \"--- ${p}:$\\($i+1\\) ---\"; for\\($j=$start;$j -le $end;$j++\\){ \"{0}: {1}\" -f \\($j+1\\),$lines[$j] } } })",
+      "PowerShell($p='src/server.rs'; $c=gh api \"repos/LOSRET/Rustracker/contents/$p\" --jq '.content'; $text=[Text.Encoding]::UTF8.GetString\\([Convert]::FromBase64String\\($c\\)\\); $lines=$text -split \"`n\"; for\\($i=0;$i -lt $lines.Length;$i++\\){ if\\($lines[$i] -match 'blacklist|admin'\\){ $start=[Math]::Max\\(0,$i-4\\); $end=[Math]::Min\\($lines.Length-1,$i+8\\); \"--- ${p}:$\\($i+1\\) ---\"; for\\($j=$start;$j -le $end;$j++\\){ \"{0}: {1}\" -f \\($j+1\\),$lines[$j] } } })",
+      "PowerShell($p='README.md'; $c=gh api \"repos/LOSRET/Rustracker/contents/$p\" --jq '.content'; $text=[Text.Encoding]::UTF8.GetString\\([Convert]::FromBase64String\\($c\\)\\); $lines=$text -split \"`n\"; for\\($i=0;$i -lt $lines.Length;$i++\\){ if\\($lines[$i] -match 'blacklist|RUSTRACKER_ADMIN_TOKEN|RUSTRACKER_BLACKLIST'\\){ $start=[Math]::Max\\(0,$i-2\\); $end=[Math]::Min\\($lines.Length-1,$i+8\\); \"--- ${p}:$\\($i+1\\) ---\"; for\\($j=$start;$j -le $end;$j++\\){ \"{0}: {1}\" -f \\($j+1\\),$lines[$j] } } })",
+      "Bash(Get-ChildItem *)"
+    ]
+  }
+}

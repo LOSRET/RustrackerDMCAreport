@@ -85,34 +85,7 @@ try {
     // 审核通过 → 推送 Rustracker
     $rustracker = null;
     if ($new_status === 'approved' && !empty($report['info_hash'])) {
-        if (!function_exists('curl_init')) {
-            $rustracker = ['success' => false, 'error' => 'curl 扩展未安装'];
-        } else {
-            $ch = curl_init();
-            curl_setopt_array($ch, [
-                CURLOPT_URL            => RUSTRACKER_API,
-                CURLOPT_POST           => true,
-                CURLOPT_HTTPHEADER     => [
-                    'Authorization: Bearer ' . RUSTRACKER_TOKEN,
-                    'Content-Type: application/json',
-                ],
-                CURLOPT_POSTFIELDS     => json_encode(['info_hash' => $report['info_hash']]),
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT        => 10,
-                CURLOPT_CONNECTTIMEOUT => 5,
-            ]);
-            $response = curl_exec($ch);
-            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curl_error = curl_error($ch);
-            curl_close($ch);
-
-            $rustracker = [
-                'http_code' => $http_code,
-                'success'   => $http_code >= 200 && $http_code < 300,
-                'error'     => $curl_error ?: null,
-                'response'  => $response,
-            ];
-        }
+        $rustracker = rustracker_push(RUSTRACKER_API, RUSTRACKER_TOKEN, $report['info_hash']);
     }
 
     $stmt = $pdo->prepare("UPDATE `$tbl` SET status = :s, admin_note = :n WHERE id = :id");

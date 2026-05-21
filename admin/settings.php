@@ -53,39 +53,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
     } elseif (isset($_POST['test'])) {
-        // 测试连接
+        // 测试连接 — 使用指定测试 hash
         $api   = trim($_POST['rustracker_api'] ?? '');
         $token = trim($_POST['rustracker_token'] ?? '');
+        $test_hash = '1111111111111111111111111111111111111111';
 
-        if ($api === '') {
-            $test_result = '请先输入 API 地址。';
-        } elseif (!function_exists('curl_init')) {
-            $test_result = '服务器未安装 curl 扩展，无法测试。';
+        $push = rustracker_push($api, $token, $test_hash);
+
+        if ($push['success']) {
+            $status = $push['added'] ? '新增成功' : '该 hash 已存在（也算成功）';
+            $test_result = "连接成功 — HTTP 200 | {$status}\nInfo Hash: {$test_hash}\n"
+                         . "注意：此测试 hash 已被写入 Rustracker blacklist 文件。\n"
+                         . "测试完成后，请在 Rustracker blacklist 文件中删除此行：\n{$test_hash}";
         } else {
-            $ch = curl_init();
-            curl_setopt_array($ch, [
-                CURLOPT_URL            => $api,
-                CURLOPT_POST           => true,
-                CURLOPT_HTTPHEADER     => [
-                    'Authorization: Bearer ' . $token,
-                    'Content-Type: application/json',
-                ],
-                CURLOPT_POSTFIELDS     => json_encode(['info_hash' => str_repeat('0', 40)]),
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT        => 10,
-                CURLOPT_CONNECTTIMEOUT => 5,
-            ]);
-            $response = curl_exec($ch);
-            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curl_error = curl_error($ch);
-            curl_close($ch);
-
-            if ($curl_error) {
-                $test_result = '连接失败：' . $curl_error;
-            } elseif ($http_code >= 200 && $http_code < 500) {
-                $test_result = '连接成功 — HTTP ' . $http_code . '。响应：' . substr($response, 0, 300);
-            } else {
-                $test_result = '服务器返回 HTTP ' . $http_code . '。响应：' . substr($response, 0, 300);
+            $test_result = '连接失败 — HTTP ' . $push['http_code'] . "\n" . $push['error'];
+            if ($push['response']) {
+                $test_result .= "\n响应：{$push['response']}";
             }
         }
     }
