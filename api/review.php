@@ -82,10 +82,11 @@ try {
         exit;
     }
 
-    // 审核通过 → GET 查询 + POST 添加
+    // 审核通过 → GET 查询 + POST 添加（可关闭自动推送）
+    $auto_push = defined('RUSTRACKER_AUTO_BLACKLIST') ? RUSTRACKER_AUTO_BLACKLIST : true;
     $rustracker = null;
     $rustracker_fatal = false;
-    if ($new_status === 'approved' && !empty($report['info_hash'])) {
+    if ($new_status === 'approved' && $auto_push && !empty($report['info_hash'])) {
         $hash = $report['info_hash'];
 
         // Step 1: GET 查询

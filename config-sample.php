@@ -19,6 +19,7 @@ define('DB_PREFIX', '');
 // ** Rustracker 黑名单 API **
 define('RUSTRACKER_API', 'http://localhost:3000/api/blacklist');
 define('RUSTRACKER_TOKEN', '');
+define('RUSTRACKER_AUTO_BLACKLIST', true);
 
 // ** 管理员账号（安装时自动生成）**
 define('ADMIN_USER', 'admin');

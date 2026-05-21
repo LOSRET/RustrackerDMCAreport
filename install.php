@@ -99,7 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             "define('DB_PASS', '" . addcslashes($_SESSION['db_pass'], "'\\") . "');\n" .
             "define('DB_PREFIX', '" . addcslashes($_SESSION['db_prefix'] ?? '', "'\\") . "');\n\n" .
             "define('RUSTRACKER_API', '" . addcslashes($rustracker_api, "'\\") . "');\n" .
-            "define('RUSTRACKER_TOKEN', '" . addcslashes($rustracker_token, "'\\") . "');\n\n" .
+            "define('RUSTRACKER_TOKEN', '" . addcslashes($rustracker_token, "'\\") . "');\n" .
+            "define('RUSTRACKER_AUTO_BLACKLIST', true);\n\n" .
             "define('ADMIN_USER', '" . addcslashes($admin_user, "'\\") . "');\n" .
             "define('ADMIN_PASS_HASH', '" . addcslashes($pass_hash, "'\\") . "');\n\n" .
             "define('AUTH_KEY', '" . $auth_key . "');\n" .

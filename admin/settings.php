@@ -42,6 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             "define('RUSTRACKER_TOKEN', '" . addcslashes($token, "'\\") . "');",
             $config
         );
+        // 替换 RUSTRACKER_AUTO_BLACKLIST
+        $auto = isset($_POST['auto_blacklist']) ? 'true' : 'false';
+        $config = preg_replace(
+            "/define\('RUSTRACKER_AUTO_BLACKLIST',\s*(true|false)\);/",
+            "define('RUSTRACKER_AUTO_BLACKLIST', {$auto});",
+            $config
+        );
 
         $written = @file_put_contents($config_path, $config);
         if ($written !== false) {
@@ -96,10 +103,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // —— 当前值 ——
 $current_api   = RUSTRACKER_API;
 $current_token = RUSTRACKER_TOKEN;
+$current_auto  = defined('RUSTRACKER_AUTO_BLACKLIST') ? RUSTRACKER_AUTO_BLACKLIST : true;
 
-// —— 表单中显示的值（提交后回显）——
+// —— 表单回显 ——
 $form_api   = $_POST['rustracker_api'] ?? $current_api;
 $form_token = $_POST['rustracker_token'] ?? $current_token;
+$form_auto  = isset($_POST['save']) ? isset($_POST['auto_blacklist']) : $current_auto;
 ?><!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -157,6 +166,14 @@ $form_token = $_POST['rustracker_token'] ?? $current_token;
                            value="<?php echo h($form_token); ?>"
                            placeholder="your-secret-token">
                     <p class="form-hint">对应 Rustracker 的 RUSTRACKER_ADMIN_TOKEN</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" name="auto_blacklist" value="1" <?php echo $form_auto ? 'checked' : ''; ?>>
+                        <span>审核通过后自动推送 Info Hash 至 Rustracker 黑名单</span>
+                    </label>
+                    <p class="form-hint">关闭后，审核通过仅变更状态，不调用 Rustracker API</p>
                 </div>
 
                 <div class="btn-row">

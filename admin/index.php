@@ -39,8 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['id'
         $rustracker_result = '';
         $rustracker_fatal = false;
 
-        // 审核通过 → 先 GET 查询，再 POST 添加
-        if ($new_status === 'approved') {
+        // 审核通过 → 先 GET 查询，再 POST 添加（可关闭自动推送）
+        $auto_push = defined('RUSTRACKER_AUTO_BLACKLIST') ? RUSTRACKER_AUTO_BLACKLIST : true;
+        if ($new_status === 'approved' && $auto_push) {
             $pdo = getDB();
             $stmt = $pdo->prepare("SELECT info_hash FROM `$table` WHERE id = :id");
             $stmt->execute([':id' => $id]);
