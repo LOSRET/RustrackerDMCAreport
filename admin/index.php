@@ -94,6 +94,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['id'
         $stmt->execute([':id' => $id]);
         $message = "举报 #{$id} 已恢复为待审核。";
         $msg_type = 'info';
+
+    } elseif ($action === 'trash') {
+        // 移入回收站 — 确保 deleted 枚举值存在
+        @$pdo = getDB();
+        @$pdo->exec("ALTER TABLE `$table` MODIFY COLUMN status ENUM('pending','approved','rejected','deleted') NOT NULL DEFAULT 'pending'");
+        $stmt = $pdo->prepare("UPDATE `$table` SET status = 'deleted' WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        $message = "举报 #{$id} 已移入回收站。";
+        $msg_type = 'info';
+
+    } elseif ($action === 'purge') {
+        // 永久删除
+        $pdo = getDB();
+        $stmt = $pdo->prepare("DELETE FROM `$table` WHERE id = :id AND status = 'deleted'");
+        $stmt->execute([':id' => $id]);
+        $message = "举报 #{$id} 已永久删除。";
+        $msg_type = 'info';
     }
 }
 
@@ -101,7 +118,7 @@ render:
 
 // —— 筛选 & 分页 ——
 $filter = $_GET['status'] ?? 'all';
-if (!in_array($filter, ['all', 'pending', 'approved', 'rejected'])) $filter = 'all';
+if (!in_array($filter, ['all', 'pending', 'approved', 'rejected', 'deleted'])) $filter = 'all';
 
 $page = max(1, (int)($_GET['page'] ?? 1));
 $per_page = 20;
@@ -109,7 +126,9 @@ $offset = ($page - 1) * $per_page;
 
 $where = '';
 $params = [];
-if ($filter !== 'all') {
+if ($filter === 'all') {
+    $where = "WHERE status != 'deleted'";
+} elseif ($filter !== 'all') {
     $where = "WHERE status = :status";
     $params[':status'] = $filter;
 }
@@ -129,7 +148,7 @@ $reports = $data_stmt->fetchAll();
 
 // —— 统计 ——
 $stats_stmt = $pdo->query("SELECT status, COUNT(*) as cnt FROM `$table` GROUP BY status");
-$stats = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+$stats = ['pending' => 0, 'approved' => 0, 'rejected' => 0, 'deleted' => 0];
 foreach ($stats_stmt as $row) $stats[$row['status']] = (int)$row['cnt'];
 
 // —— 判断是否 AJAX 请求 ——
@@ -185,7 +204,7 @@ if ($is_ajax):
             data-description="<?php echo h($r['description']); ?>"
             data-status="<?php echo h($r['status']); ?>"
             data-status_label="<?php
-                $labels = ['pending' => '待审核', 'approved' => '已通过', 'rejected' => '已驳回'];
+                $labels = ['pending' => '待审核', 'approved' => '已通过', 'rejected' => '已驳回', 'deleted' => '已删除'];
                 echo $labels[$r['status']];
             ?>"
             data-created_at="<?php echo date('Y-m-d H:i', strtotime($r['created_at'])); ?>"
@@ -217,12 +236,31 @@ if ($is_ajax):
                     <button type="submit" class="btn btn-success btn-sm">通过</button>
                 </form>
                 <button type="button" class="btn btn-danger btn-sm" onclick="DMCA.toggleReject(<?php echo (int)$r['id']; ?>)">驳回</button>
+                <?php elseif ($r['status'] === 'deleted'): ?>
+                <form method="post" class="form-inline action-form" onsubmit="return confirm('确认恢复此举报为待审核？');">
+                    <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
+                    <input type="hidden" name="action" value="reopen">
+                    <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
+                    <button type="submit" class="btn btn-outline btn-sm">恢复</button>
+                </form>
+                <form method="post" class="form-inline action-form" onsubmit="return confirm('确认永久删除？此操作不可撤销。');">
+                    <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
+                    <input type="hidden" name="action" value="purge">
+                    <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
+                    <button type="submit" class="btn btn-danger btn-sm">永久删除</button>
+                </form>
                 <?php else: ?>
                 <form method="post" class="form-inline action-form" onsubmit="return confirm('确认将此举报恢复为待审核状态？');">
                     <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
                     <input type="hidden" name="action" value="reopen">
                     <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
                     <button type="submit" class="btn btn-outline btn-sm">重新打开</button>
+                </form>
+                <form method="post" class="form-inline action-form" onsubmit="return confirm('确认移入回收站？');">
+                    <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
+                    <input type="hidden" name="action" value="trash">
+                    <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
+                    <button type="submit" class="btn btn-danger btn-sm">删除</button>
                 </form>
                 <?php if (!empty($r['admin_note'])): ?>
                 <div class="cell-action-note" title="<?php echo h($r['admin_note']); ?>"><?php echo h(mb_strlen($r['admin_note']) > 20 ? mb_substr($r['admin_note'], 0, 20) . '…' : $r['admin_note']); ?></div>
@@ -317,10 +355,11 @@ endif; // end AJAX-only output
 
         <!-- Tabs -->
         <div class="tabs">
-            <a href="?status=all" class="tab <?php echo $filter === 'all' ? 'active' : ''; ?>">全部 <?php echo array_sum($stats); ?></a>
+            <a href="?status=all" class="tab <?php echo $filter === 'all' ? 'active' : ''; ?>">全部 <?php echo array_sum($stats) - $stats['deleted']; ?></a>
             <a href="?status=pending" class="tab <?php echo $filter === 'pending' ? 'active' : ''; ?>">待审核 <?php echo $stats['pending']; ?></a>
             <a href="?status=approved" class="tab <?php echo $filter === 'approved' ? 'active' : ''; ?>">已通过 <?php echo $stats['approved']; ?></a>
             <a href="?status=rejected" class="tab <?php echo $filter === 'rejected' ? 'active' : ''; ?>">已驳回 <?php echo $stats['rejected']; ?></a>
+            <a href="?status=deleted" class="tab <?php echo $filter === 'deleted' ? 'active' : ''; ?>">回收站 <?php echo $stats['deleted']; ?></a>
         </div>
 
         <?php if (empty($reports)): ?>
@@ -360,7 +399,7 @@ endif; // end AJAX-only output
                     data-description="<?php echo h($r['description']); ?>"
                     data-status="<?php echo h($r['status']); ?>"
                     data-status_label="<?php
-                        $labels = ['pending' => '待审核', 'approved' => '已通过', 'rejected' => '已驳回'];
+                        $labels = ['pending' => '待审核', 'approved' => '已通过', 'rejected' => '已驳回', 'deleted' => '已删除'];
                         echo $labels[$r['status']];
                     ?>"
                     data-created_at="<?php echo date('Y-m-d H:i', strtotime($r['created_at'])); ?>"

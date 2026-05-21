@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS dmca_reports (
     infringing_url TEXT NOT NULL DEFAULT '',
     info_hash CHAR(40) NOT NULL,
     description TEXT NOT NULL DEFAULT '',
-    status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    status ENUM('pending','approved','rejected','deleted') NOT NULL DEFAULT 'pending',
     admin_note TEXT NOT NULL DEFAULT '',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
