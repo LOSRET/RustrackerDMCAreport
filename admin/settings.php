@@ -98,18 +98,18 @@ $form_auto  = isset($_POST['save']) ? isset($_POST['auto_blacklist']) : $current
 <div class="admin-layout">
 
     <aside class="admin-sidebar">
-        <a href="index.php" class="sidebar-brand">DMCA Panel</a>
+        <a href="index.php" class="sidebar-brand" data-i18n="nav.brand">DMCA Panel</a>
         <ul class="sidebar-nav">
-            <li><a href="index.php">举报列表</a></li>
-            <li><a href="settings.php" class="active">Tracker 设置</a></li>
-            <li><a href="logout.php">退出登录</a></li>
+            <li><a href="index.php" data-i18n="admin.sidebar.reports">举报列表</a></li>
+            <li><a href="settings.php" class="active" data-i18n="admin.sidebar.settings">Tracker 设置</a></li>
+            <li><a href="logout.php" data-i18n="admin.sidebar.logout">退出登录</a></li>
         </ul>
     </aside>
 
     <main class="admin-main">
 
         <div class="admin-header">
-            <h1>Tracker API 设置</h1>
+            <h1 data-i18n="settings.heading">Tracker API 设置</h1>
         </div>
 
         <?php if ($message): ?>
@@ -120,40 +120,40 @@ $form_auto  = isset($_POST['save']) ? isset($_POST['auto_blacklist']) : $current
 
         <div class="card card-narrow">
 
-            <h2 class="mb-16">Rustracker 黑名单 API</h2>
-            <p class="text-sm mb-24">审核通过举报后，系统将先 GET 查询是否已拉黑，再 POST 添加。GET 只读无副作用，POST 会写入 blacklist 文件。</p>
+            <h2 class="mb-16" data-i18n="settings.heading">Tracker API 设置</h2>
+            <p class="text-sm mb-24" data-i18n="settings.intro">审核通过举报后，系统将先 GET 查询是否已拉黑，再 POST 添加。GET 只读无副作用，POST 会写入 blacklist 文件。</p>
 
             <form method="post">
                 <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
 
                 <div class="form-group">
-                    <label class="form-label" for="rustracker_api">API 地址</label>
+                    <label class="form-label" for="rustracker_api" data-i18n="settings.api_label">API 地址</label>
                     <input type="url" id="rustracker_api" name="rustracker_api" class="form-input"
                            value="<?php echo h($form_api); ?>"
                            placeholder="http://localhost:3000/api/blacklist">
-                    <p class="form-hint">两个接口共用同一 URL：GET ?info_hash= 查询，POST 添加</p>
+                    <p class="form-hint" data-i18n="settings.api_hint">两个接口共用同一 URL：GET ?info_hash= 查询，POST 添加</p>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="rustracker_token">Bearer Token</label>
+                    <label class="form-label" for="rustracker_token" data-i18n="settings.token_label">Bearer Token</label>
                     <input type="text" id="rustracker_token" name="rustracker_token" class="form-input"
                            value="<?php echo h($form_token); ?>"
                            placeholder="your-secret-token">
-                    <p class="form-hint">对应 Rustracker 的 RUSTRACKER_ADMIN_TOKEN</p>
+                    <p class="form-hint" data-i18n="settings.token_hint">对应 Rustracker 的 RUSTRACKER_ADMIN_TOKEN</p>
                 </div>
 
                 <div class="form-group">
                     <label class="form-checkbox">
                         <input type="checkbox" name="auto_blacklist" value="1" <?php echo $form_auto ? 'checked' : ''; ?>>
-                        <span>审核通过后自动推送 Info Hash 至 Rustracker 黑名单</span>
+                        <span data-i18n="settings.auto_label">审核通过后自动推送 Info Hash 至 Rustracker 黑名单</span>
                     </label>
-                    <p class="form-hint">关闭后，审核通过仅变更状态，不调用 Rustracker API</p>
+                    <p class="form-hint" data-i18n="settings.auto_hint">关闭后，审核通过仅变更状态，不调用 Rustracker API</p>
                 </div>
 
                 <div class="btn-row">
-                    <button type="submit" name="save" class="btn btn-primary">保存设置</button>
-                    <button type="submit" name="test_get" class="btn btn-outline">测试 GET 查询（只读）</button>
-                    <button type="submit" name="test_post" class="btn btn-outline">测试 POST 添加</button>
+                    <button type="submit" name="save" class="btn btn-primary" data-i18n="settings.btn_save">保存设置</button>
+                    <button type="submit" name="test_get" class="btn btn-outline" data-i18n="settings.btn_test_get">测试 GET 查询（只读）</button>
+                    <button type="submit" name="test_post" class="btn btn-outline" data-i18n="settings.btn_test_post">测试 POST 添加</button>
                 </div>
             </form>
 
@@ -168,5 +168,6 @@ $form_auto  = isset($_POST['save']) ? isset($_POST['auto_blacklist']) : $current
     </main>
 </div>
 
+<script src="../assets/i18n.js"></script>
 </body>
 </html>

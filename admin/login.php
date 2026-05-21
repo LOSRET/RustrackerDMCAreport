@@ -54,11 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?><!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>管理员登录 — DMCA Panel</title>
+<title data-i18n="login.title">管理员登录 — DMCA Panel</title>
 <link rel="stylesheet" href="../assets/style.css">
 </head>
 <body>
@@ -67,8 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <nav class="topnav">
     <div class="topnav-inner">
-        <a href="../index.php" class="topnav-brand">DMCA Panel</a>
-        <span class="topnav-link">管理员登录</span>
+        <a href="../index.php" class="topnav-brand" data-i18n="nav.brand">DMCA Panel</a>
+        <div class="topnav-right">
+            <button type="button" id="lang-switch" class="lang-switch" data-i18n="lang.switch">English</button>
+            <span class="topnav-link" data-i18n="login.title">管理员登录</span>
+        </div>
     </div>
 </nav>
 
@@ -76,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="login-card">
     <div class="card">
 
-        <h2 class="login-title">管理员登录</h2>
+        <h2 class="login-title" data-i18n="login.title">管理员登录</h2>
 
         <?php if ($error): ?>
         <div class="alert alert-error mt-16"><?php echo h($error); ?></div>
@@ -84,24 +87,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form method="post" class="mt-24">
             <div class="form-group">
-                <label class="form-label" for="username">用户名</label>
+                <label class="form-label" for="username" data-i18n="login.username">用户名</label>
                 <input type="text" id="username" name="username" class="form-input"
                        value="<?php echo h($_POST['username'] ?? ''); ?>" required autofocus>
             </div>
             <div class="form-group">
-                <label class="form-label" for="password">密码</label>
+                <label class="form-label" for="password" data-i18n="login.password">密码</label>
                 <input type="password" id="password" name="password" class="form-input" required>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">登录</button>
+            <button type="submit" class="btn btn-primary btn-block" data-i18n="login.button">登录</button>
         </form>
 
         <p class="text-sm text-center mt-16">
-            <a href="../index.php">&larr; 返回举报页面</a>
+            <a href="../index.php" data-i18n="login.back">&larr; 返回举报页面</a>
         </p>
 
     </div>
 </div>
 </div>
 
+<script src="../assets/i18n.js"></script>
 </body>
 </html>

@@ -79,21 +79,22 @@
     function openModal(data) {
         var overlay = document.getElementById('detail-modal');
         if (!overlay) return;
-        document.getElementById('modal-title').textContent = '举报详情 #' + data.id;
+        var t = window.__i18n ? window.__i18n.t : function(k) { return k; };
+        document.getElementById('modal-title').textContent = t('admin.modal.title') + ' #' + data.id;
         var html = '';
-        html += '<div class="modal-section"><div class="modal-label">举报人</div><div class="modal-value">' + esc(data.reporter_name) + ' &lt;' + esc(data.reporter_email) + '&gt;</div></div>';
-        if (data.company_name) html += '<div class="modal-section"><div class="modal-label">权利人</div><div class="modal-value">' + esc(data.company_name) + '</div></div>';
-        if (data.address) html += '<div class="modal-section"><div class="modal-label">联系地址</div><div class="modal-value">' + esc(data.address) + '</div></div>';
-        if (data.role_label) html += '<div class="modal-section"><div class="modal-label">举报人身份</div><div class="modal-value">' + esc(data.role_label) + '</div></div>';
-        if (data.phone) html += '<div class="modal-section"><div class="modal-label">联系电话</div><div class="modal-value">' + esc(data.phone) + '</div></div>';
-        html += '<div class="modal-section"><div class="modal-label">原始作品</div><div class="modal-value">' + esc(data.original_work) + '</div></div>';
-        if (data.infringing_url) html += '<div class="modal-section"><div class="modal-label">侵权链接</div><div class="modal-value"><a href="' + esc(data.infringing_url) + '" target="_blank" rel="noopener">' + esc(data.infringing_url) + '</a></div></div>';
-        if (data.infringing_location) html += '<div class="modal-section"><div class="modal-label">侵权具体位置</div><div class="modal-value">' + esc(data.infringing_location) + '</div></div>';
-        if (data.info_hash) html += '<div class="modal-section"><div class="modal-label">Info Hash</div><div class="modal-value"><code class="code-inline">' + esc(data.info_hash) + '</code> <button class="copy-btn" onclick="DMCA.copyHash(\'' + esc(data.info_hash) + '\', this)">复制</button></div></div>';
-        if (data.description) html += '<div class="modal-section"><div class="modal-label">补充说明</div><div class="modal-value">' + esc(data.description) + '</div></div>';
-        if (data.signature_name) html += '<div class="modal-section"><div class="modal-label">电子签名</div><div class="modal-value">' + esc(data.signature_name) + '</div></div>';
-        html += '<div class="modal-section modal-value text-sm">状态：' + data.status_label + ' &middot; 提交于 ' + data.created_at + '</div>';
-        if (data.admin_note) html += '<div class="modal-section"><div class="modal-label">管理员备注</div><div class="modal-value">' + esc(data.admin_note) + '</div></div>';
+        html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.reporter') + '</div><div class="modal-value">' + esc(data.reporter_name) + ' &lt;' + esc(data.reporter_email) + '&gt;</div></div>';
+        if (data.company_name) html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.company') + '</div><div class="modal-value">' + esc(data.company_name) + '</div></div>';
+        if (data.address) html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.address') + '</div><div class="modal-value">' + esc(data.address) + '</div></div>';
+        if (data.role_label) html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.role') + '</div><div class="modal-value">' + esc(data.role_label) + '</div></div>';
+        if (data.phone) html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.phone') + '</div><div class="modal-value">' + esc(data.phone) + '</div></div>';
+        html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.work') + '</div><div class="modal-value">' + esc(data.original_work) + '</div></div>';
+        if (data.infringing_url) html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.url') + '</div><div class="modal-value"><a href="' + esc(data.infringing_url) + '" target="_blank" rel="noopener">' + esc(data.infringing_url) + '</a></div></div>';
+        if (data.infringing_location) html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.location') + '</div><div class="modal-value">' + esc(data.infringing_location) + '</div></div>';
+        if (data.info_hash) html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.hash') + '</div><div class="modal-value"><code class="code-inline">' + esc(data.info_hash) + '</code> <button class="copy-btn" onclick="DMCA.copyHash(\'' + esc(data.info_hash) + '\', this)">' + t('admin.copy') + '</button></div></div>';
+        if (data.description) html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.desc') + '</div><div class="modal-value">' + esc(data.description) + '</div></div>';
+        if (data.signature_name) html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.signature') + '</div><div class="modal-value">' + esc(data.signature_name) + '</div></div>';
+        html += '<div class="modal-section modal-value text-sm">' + t('admin.modal.status') + '：' + data.status_label + ' &middot; ' + data.created_at + '</div>';
+        if (data.admin_note) html += '<div class="modal-section"><div class="modal-label">' + t('admin.modal.admin_note') + '</div><div class="modal-value">' + esc(data.admin_note) + '</div></div>';
 
         document.getElementById('modal-content').innerHTML = html;
         overlay.classList.add('open');
@@ -159,10 +160,10 @@
         if (navigator.clipboard) {
             navigator.clipboard.writeText(hash).then(function () {
                 btn.classList.add('copied');
-                btn.textContent = '已复制';
+                btn.textContent = (window.__i18n ? window.__i18n.t('admin.copied') : 'Copied');
                 setTimeout(function () {
                     btn.classList.remove('copied');
-                    btn.textContent = '复制';
+                    btn.textContent = (window.__i18n ? window.__i18n.t('admin.copy') : 'Copy');
                 }, 2000);
             });
         } else {

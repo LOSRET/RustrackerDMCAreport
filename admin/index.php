@@ -172,8 +172,8 @@ if ($is_ajax):
 <?php if (empty($reports)): ?>
 <div class="empty-state" id="empty-search">
     <div class="empty-state-icon">&#128196;</div>
-    <h2>暂无数据</h2>
-    <p>没有符合条件的举报记录</p>
+    <h2 data-i18n="admin.empty.title">暂无数据</h2>
+    <p data-i18n="admin.empty.desc">没有符合条件的举报记录</p>
 </div>
 <?php else: ?>
 <div class="table-wrap">
@@ -240,34 +240,34 @@ if ($is_ajax):
                     <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
                     <input type="hidden" name="action" value="approve">
                     <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
-                    <button type="submit" class="btn btn-success btn-sm">通过</button>
+                    <button type="submit" class="btn btn-success btn-sm" data-i18n="admin.btn.approve">通过</button>
                 </form>
-                <button type="button" class="btn btn-danger btn-sm" onclick="DMCA.toggleReject(<?php echo (int)$r['id']; ?>)">驳回</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="DMCA.toggleReject(<?php echo (int)$r['id']; ?>)"><span data-i18n="admin.btn.reject">驳回</span></button>
                 <?php elseif ($r['status'] === 'deleted'): ?>
                 <form method="post" class="form-inline action-form" onsubmit="return confirm('确认恢复此举报为待审核？');">
                     <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
                     <input type="hidden" name="action" value="reopen">
                     <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
-                    <button type="submit" class="btn btn-outline btn-sm">恢复</button>
+                    <button type="submit" class="btn btn-outline btn-sm" data-i18n="admin.btn.restore">恢复</button>
                 </form>
                 <form method="post" class="form-inline action-form" onsubmit="return confirm('确认永久删除？此操作不可撤销。');">
                     <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
                     <input type="hidden" name="action" value="purge">
                     <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
-                    <button type="submit" class="btn btn-danger btn-sm">永久删除</button>
+                    <button type="submit" class="btn btn-danger btn-sm" data-i18n="admin.btn.purge">永久删除</button>
                 </form>
                 <?php else: ?>
                 <form method="post" class="form-inline action-form" onsubmit="return confirm('确认将此举报恢复为待审核状态？');">
                     <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
                     <input type="hidden" name="action" value="reopen">
                     <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
-                    <button type="submit" class="btn btn-outline btn-sm">重新打开</button>
+                    <button type="submit" class="btn btn-outline btn-sm" data-i18n="admin.btn.reopen">重新打开</button>
                 </form>
                 <form method="post" class="form-inline action-form" onsubmit="return confirm('确认移入回收站？');">
                     <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
                     <input type="hidden" name="action" value="trash">
                     <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
-                    <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                    <button type="submit" class="btn btn-danger btn-sm" data-i18n="admin.btn.trash">删除</button>
                 </form>
                 <?php if (!empty($r['admin_note'])): ?>
                 <div class="cell-action-note" title="<?php echo h($r['admin_note']); ?>"><?php echo h(mb_strlen($r['admin_note']) > 20 ? mb_substr($r['admin_note'], 0, 20) . '…' : $r['admin_note']); ?></div>
@@ -284,12 +284,12 @@ if ($is_ajax):
                         <input type="hidden" name="action" value="reject">
                         <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
                         <div class="form-group">
-                            <label class="form-label" for="reject_note_<?php echo (int)$r['id']; ?>">驳回理由</label>
-                            <textarea id="reject_note_<?php echo (int)$r['id']; ?>" name="admin_note" placeholder="可选填写驳回理由..."></textarea>
+                            <label class="form-label" for="reject_note_<?php echo (int)$r['id']; ?>" data-i18n="admin.reject.label">驳回理由</label>
+                            <textarea id="reject_note_<?php echo (int)$r['id']; ?>" name="admin_note" data-i18n="admin.reject.placeholder" placeholder="可选填写驳回理由..."></textarea>
                         </div>
                         <div class="reject-form-actions">
-                            <button type="button" class="btn btn-outline btn-sm" onclick="DMCA.cancelReject(<?php echo (int)$r['id']; ?>)">取消</button>
-                            <button type="submit" class="btn btn-danger btn-sm">确认驳回</button>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="DMCA.cancelReject(<?php echo (int)$r['id']; ?>)"><span data-i18n="admin.btn.cancel">取消</span></button>
+                            <button type="submit" class="btn btn-danger btn-sm" data-i18n="admin.btn.confirm_reject">确认驳回</button>
                         </div>
                     </form>
                 </div>
@@ -304,15 +304,15 @@ if ($is_ajax):
 <?php if ($total_pages > 1): ?>
 <div class="pagination">
     <?php if ($page > 1): ?>
-        <a href="?status=<?php echo h($filter); ?>&page=<?php echo $page - 1; ?>">&larr; 上一页</a>
+        <a href="?status=<?php echo h($filter); ?>&page=<?php echo $page - 1; ?>"><span data-i18n="admin.pagination.prev">&larr; 上一页</span></a>
     <?php else: ?>
-        <span class="disabled">&larr; 上一页</span>
+        <span class="disabled"><span data-i18n="admin.pagination.prev">&larr; 上一页</span></span>
     <?php endif; ?>
     <span><?php echo $page; ?> / <?php echo $total_pages; ?></span>
     <?php if ($page < $total_pages): ?>
-        <a href="?status=<?php echo h($filter); ?>&page=<?php echo $page + 1; ?>">下一页 &rarr;</a>
+        <a href="?status=<?php echo h($filter); ?>&page=<?php echo $page + 1; ?>"><span data-i18n="admin.pagination.next">下一页 &rarr;</span></a>
     <?php else: ?>
-        <span class="disabled">下一页 &rarr;</span>
+        <span class="disabled"><span data-i18n="admin.pagination.next">下一页 &rarr;</span></span>
     <?php endif; ?>
 </div>
 <?php endif; ?>
@@ -336,19 +336,19 @@ endif; // end AJAX-only output
 <div class="admin-layout">
 
     <aside class="admin-sidebar">
-        <a href="index.php" class="sidebar-brand">DMCA Panel</a>
+        <a href="index.php" class="sidebar-brand" data-i18n="nav.brand">DMCA Panel</a>
         <ul class="sidebar-nav">
-            <li><a href="index.php" class="active">举报列表</a></li>
-            <li><a href="settings.php">Tracker 设置</a></li>
-            <li><a href="logout.php">退出登录</a></li>
+            <li><a href="index.php" class="active" data-i18n="admin.sidebar.reports">举报列表</a></li>
+            <li><a href="settings.php" data-i18n="admin.sidebar.settings">Tracker 设置</a></li>
+            <li><a href="logout.php" data-i18n="admin.sidebar.logout">退出登录</a></li>
         </ul>
     </aside>
 
     <main class="admin-main">
 
         <div class="admin-header">
-            <h1>DMCA 举报管理</h1>
-            <a href="../index.php" class="btn btn-outline btn-sm">查看公开页面 &rarr;</a>
+            <h1 data-i18n="admin.heading">DMCA 举报管理</h1>
+            <a href="../index.php" class="btn btn-outline btn-sm" data-i18n="admin.view_public">查看公开页面 →</a>
         </div>
 
         <?php if ($message): ?>
@@ -357,23 +357,23 @@ endif; // end AJAX-only output
 
         <!-- 搜索 -->
         <div class="search-bar">
-            <input type="text" class="search-input" id="search" placeholder="搜索 举报人 / 邮箱 / 公司 / Info Hash ..." autocomplete="off">
+            <input type="text" class="search-input" id="search" data-i18n="admin.search.placeholder" placeholder="搜索 举报人 / 邮箱 / 公司 / Info Hash ..." autocomplete="off">
         </div>
 
         <!-- Tabs -->
         <div class="tabs">
-            <a href="?status=all" class="tab <?php echo $filter === 'all' ? 'active' : ''; ?>">全部 <?php echo array_sum($stats) - $stats['deleted']; ?></a>
-            <a href="?status=pending" class="tab <?php echo $filter === 'pending' ? 'active' : ''; ?>">待审核 <?php echo $stats['pending']; ?></a>
-            <a href="?status=approved" class="tab <?php echo $filter === 'approved' ? 'active' : ''; ?>">已通过 <?php echo $stats['approved']; ?></a>
-            <a href="?status=rejected" class="tab <?php echo $filter === 'rejected' ? 'active' : ''; ?>">已驳回 <?php echo $stats['rejected']; ?></a>
-            <a href="?status=deleted" class="tab <?php echo $filter === 'deleted' ? 'active' : ''; ?>">回收站 <?php echo $stats['deleted']; ?></a>
+            <a href="?status=all" class="tab <?php echo $filter === 'all' ? 'active' : ''; ?>"><span data-i18n="admin.tab.all">全部</span> <?php echo array_sum($stats) - $stats['deleted']; ?></a>
+            <a href="?status=pending" class="tab <?php echo $filter === 'pending' ? 'active' : ''; ?>"><span data-i18n="admin.tab.pending">待审核</span> <?php echo $stats['pending']; ?></a>
+            <a href="?status=approved" class="tab <?php echo $filter === 'approved' ? 'active' : ''; ?>"><span data-i18n="admin.tab.approved">已通过</span> <?php echo $stats['approved']; ?></a>
+            <a href="?status=rejected" class="tab <?php echo $filter === 'rejected' ? 'active' : ''; ?>"><span data-i18n="admin.tab.rejected">已驳回</span> <?php echo $stats['rejected']; ?></a>
+            <a href="?status=deleted" class="tab <?php echo $filter === 'deleted' ? 'active' : ''; ?>"><span data-i18n="admin.tab.trash">回收站</span> <?php echo $stats['deleted']; ?></a>
         </div>
 
         <?php if (empty($reports)): ?>
         <div class="empty-state">
             <div class="empty-state-icon">&#128196;</div>
-            <h2>暂无数据</h2>
-            <p>没有符合条件的举报记录</p>
+            <h2 data-i18n="admin.empty.title">暂无数据</h2>
+            <p data-i18n="admin.empty.desc">没有符合条件的举报记录</p>
         </div>
         <?php else: ?>
 
@@ -381,14 +381,14 @@ endif; // end AJAX-only output
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>举报人</th>
-                    <th class="col-company">公司</th>
-                    <th>原始作品</th>
-                    <th class="col-hash">Info Hash</th>
-                    <th>状态</th>
-                    <th>提交时间</th>
-                    <th>操作</th>
+                    <th data-i18n="admin.th.id">ID</th>
+                    <th data-i18n="admin.th.reporter">举报人</th>
+                    <th class="col-company" data-i18n="admin.th.company">公司</th>
+                    <th data-i18n="admin.th.work">原始作品</th>
+                    <th class="col-hash" data-i18n="admin.th.hash">Info Hash</th>
+                    <th data-i18n="admin.th.status">状态</th>
+                    <th data-i18n="admin.th.date">提交时间</th>
+                    <th data-i18n="admin.th.actions">操作</th>
                 </tr>
             </thead>
             <tbody>
@@ -435,15 +435,15 @@ endif; // end AJAX-only output
                             <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
                             <input type="hidden" name="action" value="approve">
                             <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
-                            <button type="submit" class="btn btn-success btn-sm">通过</button>
+                            <button type="submit" class="btn btn-success btn-sm" data-i18n="admin.btn.approve">通过</button>
                         </form>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="DMCA.toggleReject(<?php echo (int)$r['id']; ?>)">驳回</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="DMCA.toggleReject(<?php echo (int)$r['id']; ?>)"><span data-i18n="admin.btn.reject">驳回</span></button>
                         <?php else: ?>
                         <form method="post" class="form-inline action-form" onsubmit="return confirm('确认将此举报恢复为待审核状态？');">
                             <input type="hidden" name="id" value="<?php echo (int)$r['id']; ?>">
                             <input type="hidden" name="action" value="reopen">
                             <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
-                            <button type="submit" class="btn btn-outline btn-sm">重新打开</button>
+                            <button type="submit" class="btn btn-outline btn-sm" data-i18n="admin.btn.reopen">重新打开</button>
                         </form>
                         <?php if (!empty($r['admin_note'])): ?>
                         <div class="cell-action-note" title="<?php echo h($r['admin_note']); ?>"><?php echo h(mb_strlen($r['admin_note']) > 20 ? mb_substr($r['admin_note'], 0, 20) . '…' : $r['admin_note']); ?></div>
@@ -460,12 +460,12 @@ endif; // end AJAX-only output
                                 <input type="hidden" name="action" value="reject">
                                 <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
                                 <div class="form-group">
-                                    <label class="form-label" for="reject_note_<?php echo (int)$r['id']; ?>">驳回理由</label>
-                                    <textarea id="reject_note_<?php echo (int)$r['id']; ?>" name="admin_note" placeholder="可选填写驳回理由..."></textarea>
+                                    <label class="form-label" for="reject_note_<?php echo (int)$r['id']; ?>" data-i18n="admin.reject.label">驳回理由</label>
+                                    <textarea id="reject_note_<?php echo (int)$r['id']; ?>" name="admin_note" data-i18n="admin.reject.placeholder" placeholder="可选填写驳回理由..."></textarea>
                                 </div>
                                 <div class="reject-form-actions">
-                                    <button type="button" class="btn btn-outline btn-sm" onclick="DMCA.cancelReject(<?php echo (int)$r['id']; ?>)">取消</button>
-                                    <button type="submit" class="btn btn-danger btn-sm">确认驳回</button>
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="DMCA.cancelReject(<?php echo (int)$r['id']; ?>)"><span data-i18n="admin.btn.cancel">取消</span></button>
+                                    <button type="submit" class="btn btn-danger btn-sm" data-i18n="admin.btn.confirm_reject">确认驳回</button>
                                 </div>
                             </form>
                         </div>
@@ -480,15 +480,15 @@ endif; // end AJAX-only output
         <?php if ($total_pages > 1): ?>
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?status=<?php echo h($filter); ?>&page=<?php echo $page - 1; ?>">&larr; 上一页</a>
+                <a href="?status=<?php echo h($filter); ?>&page=<?php echo $page - 1; ?>"><span data-i18n="admin.pagination.prev">&larr; 上一页</span></a>
             <?php else: ?>
-                <span class="disabled">&larr; 上一页</span>
+                <span class="disabled"><span data-i18n="admin.pagination.prev">&larr; 上一页</span></span>
             <?php endif; ?>
             <span><?php echo $page; ?> / <?php echo $total_pages; ?></span>
             <?php if ($page < $total_pages): ?>
-                <a href="?status=<?php echo h($filter); ?>&page=<?php echo $page + 1; ?>">下一页 &rarr;</a>
+                <a href="?status=<?php echo h($filter); ?>&page=<?php echo $page + 1; ?>"><span data-i18n="admin.pagination.next">下一页 &rarr;</span></a>
             <?php else: ?>
-                <span class="disabled">下一页 &rarr;</span>
+                <span class="disabled"><span data-i18n="admin.pagination.next">下一页 &rarr;</span></span>
             <?php endif; ?>
         </div>
         <?php endif; ?>
@@ -506,6 +506,7 @@ endif; // end AJAX-only output
     </div>
 </div>
 
+<script src="../assets/i18n.js"></script>
 <script src="../assets/app.js"></script>
 </body>
 </html>
