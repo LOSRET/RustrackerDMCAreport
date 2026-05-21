@@ -21,16 +21,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($username === '' || $password === '') {
         $error = '请输入用户名和密码';
-    } elseif (!hash_equals(ADMIN_USER, $username)) {
-        $error = '用户名或密码错误';
-    } elseif (!password_verify($password, ADMIN_PASS_HASH)) {
-        $error = '用户名或密码错误';
     } else {
-        session_regenerate_id(true);
-        $_SESSION['admin_logged_in'] = true;
-        $_SESSION['admin_user'] = $username;
-        header('Location: index.php');
-        exit;
+        $authed = false;
+
+        try {
+            $pdo = getDB();
+            $tbl = DB_PREFIX . 'admins';
+            $stmt = $pdo->prepare("SELECT password_hash FROM `$tbl` WHERE username = :u LIMIT 1");
+            $stmt->execute([':u' => $username]);
+            $hash = $stmt->fetchColumn();
+
+            if ($hash && password_verify($password, $hash)) {
+                $authed = true;
+            }
+        } catch (PDOException $e) {
+            // 表不存在 → 回退到旧常量
+            if (defined('ADMIN_USER') && hash_equals(ADMIN_USER, $username)
+                && defined('ADMIN_PASS_HASH') && password_verify($password, ADMIN_PASS_HASH)) {
+                $authed = true;
+            }
+        }
+
+        if ($authed) {
+            session_regenerate_id(true);
+            $_SESSION['admin_logged_in'] = true;
+            $_SESSION['admin_user'] = $username;
+            header('Location: index.php');
+            exit;
+        } else {
+            $error = '用户名或密码错误';
+        }
     }
 }
 ?><!DOCTYPE html>

@@ -26,41 +26,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (isset($_POST['save'])) {
         $api   = trim($_POST['rustracker_api'] ?? '');
         $token = trim($_POST['rustracker_token'] ?? '');
+        $auto  = isset($_POST['auto_blacklist']) ? '1' : '0';
 
-        $config_path = __DIR__ . '/../config.php';
-        $config = file_get_contents($config_path);
+        setting_set('rustracker_api', $api);
+        setting_set('rustracker_token', $token);
+        setting_set('auto_blacklist', $auto);
 
-        // 替换 RUSTRACKER_API
-        $config = preg_replace(
-            "/define\('RUSTRACKER_API',\s*'[^']*'\);/",
-            "define('RUSTRACKER_API', '" . addcslashes($api, "'\\") . "');",
-            $config
-        );
-        // 替换 RUSTRACKER_TOKEN
-        $config = preg_replace(
-            "/define\('RUSTRACKER_TOKEN',\s*'[^']*'\);/",
-            "define('RUSTRACKER_TOKEN', '" . addcslashes($token, "'\\") . "');",
-            $config
-        );
-        // 替换 RUSTRACKER_AUTO_BLACKLIST
-        $auto = isset($_POST['auto_blacklist']) ? 'true' : 'false';
-        $config = preg_replace(
-            "/define\('RUSTRACKER_AUTO_BLACKLIST',\s*(true|false)\);/",
-            "define('RUSTRACKER_AUTO_BLACKLIST', {$auto});",
-            $config
-        );
-
-        $written = @file_put_contents($config_path, $config);
-        if ($written !== false) {
-            $message = '设置已保存。';
-            $msg_type = 'success';
-        } else {
-            $message = '无法写入 config.php，请检查文件权限。';
-            $msg_type = 'error';
-        }
+        $message = '设置已保存。';
+        $msg_type = 'success';
 
     } elseif (isset($_POST['test_get'])) {
-        // 测试 GET 查询（只读，安全）
         $api   = trim($_POST['rustracker_api'] ?? '');
         $token = trim($_POST['rustracker_token'] ?? '');
         $test_hash = '1111111111111111111111111111111111111111';
@@ -79,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
     } elseif (isset($_POST['test_post'])) {
-        // 测试 POST 添加（会写入 blacklist 文件）
         $api   = trim($_POST['rustracker_api'] ?? '');
         $token = trim($_POST['rustracker_token'] ?? '');
         $test_hash = '1111111111111111111111111111111111111111';
@@ -100,10 +74,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// —— 当前值 ——
-$current_api   = RUSTRACKER_API;
-$current_token = RUSTRACKER_TOKEN;
-$current_auto  = defined('RUSTRACKER_AUTO_BLACKLIST') ? RUSTRACKER_AUTO_BLACKLIST : true;
+// —— 当前值（从 DB 读取，回退到旧常量）——
+$current_api   = setting_get('rustracker_api');
+$current_token = setting_get('rustracker_token');
+$current_auto  = setting_get('auto_blacklist', '1') === '1';
 
 // —— 表单回显 ——
 $form_api   = $_POST['rustracker_api'] ?? $current_api;

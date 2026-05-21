@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['id'
         $rustracker_fatal = false;
 
         // 审核通过 → 先 GET 查询，再 POST 添加（可关闭自动推送）
-        $auto_push = defined('RUSTRACKER_AUTO_BLACKLIST') ? RUSTRACKER_AUTO_BLACKLIST : true;
+        $auto_push = setting_get('auto_blacklist', '1') === '1';
         if ($new_status === 'approved' && $auto_push) {
             $pdo = getDB();
             $stmt = $pdo->prepare("SELECT info_hash FROM `$table` WHERE id = :id");
@@ -51,14 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['id'
                 $hash = $row['info_hash'];
 
                 // Step 1: GET 查询是否已在黑名单
-                $check = rustracker_check(RUSTRACKER_API, RUSTRACKER_TOKEN, $hash);
+                $check = rustracker_check(setting_get('rustracker_api'), setting_get('rustracker_token'), $hash);
 
                 if ($check['success'] && $check['blacklisted']) {
                     // 已在黑名单，无需 POST
                     $rustracker_result = '该 Info Hash 已在 Rustracker 黑名单中，跳过添加。';
                 } elseif ($check['success'] && !$check['blacklisted']) {
                     // Step 2: 不在黑名单，POST 添加
-                    $push = rustracker_push(RUSTRACKER_API, RUSTRACKER_TOKEN, $hash);
+                    $push = rustracker_push(setting_get('rustracker_api'), setting_get('rustracker_token'), $hash);
                     if ($push['success']) {
                         $rustracker_result = $push['added']
                             ? '已推送至 Rustracker 黑名单'

@@ -90,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
         $csrf_secret = bin2hex(random_bytes(32));
         $pass_hash  = password_hash($admin_pass, PASSWORD_BCRYPT);
 
+        // 写 config.php（仅 DB 连接 + 安全密钥）
         $config = "<?php\n" .
             "/** DMCA Panel 配置文件 — 由安装向导自动生成 */\n\n" .
             "define('DB_HOST', '" . addcslashes($_SESSION['db_host'], "'\\") . "');\n" .
@@ -98,22 +99,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 2) {
             "define('DB_USER', '" . addcslashes($_SESSION['db_user'], "'\\") . "');\n" .
             "define('DB_PASS', '" . addcslashes($_SESSION['db_pass'], "'\\") . "');\n" .
             "define('DB_PREFIX', '" . addcslashes($_SESSION['db_prefix'] ?? '', "'\\") . "');\n\n" .
-            "define('RUSTRACKER_API', '" . addcslashes($rustracker_api, "'\\") . "');\n" .
-            "define('RUSTRACKER_TOKEN', '" . addcslashes($rustracker_token, "'\\") . "');\n" .
-            "define('RUSTRACKER_AUTO_BLACKLIST', true);\n\n" .
-            "define('ADMIN_USER', '" . addcslashes($admin_user, "'\\") . "');\n" .
-            "define('ADMIN_PASS_HASH', '" . addcslashes($pass_hash, "'\\") . "');\n\n" .
             "define('AUTH_KEY', '" . $auth_key . "');\n" .
             "define('CSRF_SECRET', '" . $csrf_secret . "');\n";
 
         $written = @file_put_contents(__DIR__ . '/config.php', $config);
-        if ($written !== false) {
-            session_destroy();
-            header('Location: install.php?step=3');
-            exit;
-        } else {
+        if ($written === false) {
             $_SESSION['config_code'] = $config;
             $errors[] = '无法自动写入 config.php，请手动创建文件并粘贴以下内容。';
+        } else {
+            // 连接数据库写入管理员和设置
+            try {
+                $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
+                    $_SESSION['db_host'], (int)$_SESSION['db_port'], $_SESSION['db_name']);
+                $pdo = new PDO($dsn, $_SESSION['db_user'], $_SESSION['db_pass'], [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                ]);
+
+                $prefix = $_SESSION['db_prefix'] ?? '';
+
+                // 确保表存在
+                $pdo->exec("CREATE TABLE IF NOT EXISTS `{$prefix}admins` (
+                    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                    username VARCHAR(100) NOT NULL UNIQUE,
+                    password_hash VARCHAR(255) NOT NULL,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                $pdo->exec("CREATE TABLE IF NOT EXISTS `{$prefix}settings` (
+                    `key` VARCHAR(64) PRIMARY KEY,
+                    `value` TEXT NOT NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+                // 写入管理员
+                $stmt = $pdo->prepare("INSERT INTO `{$prefix}admins` (username, password_hash) VALUES (:u, :p)");
+                $stmt->execute([':u' => $admin_user, ':p' => $pass_hash]);
+
+                // 写入 settings
+                $stmt = $pdo->prepare("INSERT INTO `{$prefix}settings` (`key`, `value`) VALUES (:k, :v)");
+                $stmt->execute([':k' => 'rustracker_api',   ':v' => $rustracker_api]);
+                $stmt->execute([':k' => 'rustracker_token', ':v' => $rustracker_token]);
+                $stmt->execute([':k' => 'auto_blacklist',   ':v' => '1']);
+
+                session_destroy();
+                header('Location: install.php?step=3');
+                exit;
+            } catch (PDOException $e) {
+                $errors[] = '数据库写入失败：' . $e->getMessage();
+            }
         }
     }
 }

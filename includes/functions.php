@@ -17,6 +17,42 @@ function getDB(): PDO {
     return $pdo;
 }
 
+// ——— Key-Value 设置（存储在 settings 表）———
+function setting_get(string $key, string $default = ''): string {
+    try {
+        $pdo = getDB();
+        $tbl = DB_PREFIX . 'settings';
+        $stmt = $pdo->prepare("SELECT `value` FROM `$tbl` WHERE `key` = :k");
+        $stmt->execute([':k' => $key]);
+        $row = $stmt->fetchColumn();
+        if ($row !== false) return $row;
+    } catch (PDOException $e) {
+        // 表不存在时回退到常量
+    }
+
+    // 回退：旧安装可能还在 config.php 常量里
+    $fallback_map = [
+        'rustracker_api'   => 'RUSTRACKER_API',
+        'rustracker_token' => 'RUSTRACKER_TOKEN',
+        'auto_blacklist'   => 'RUSTRACKER_AUTO_BLACKLIST',
+    ];
+    if (isset($fallback_map[$key]) && defined($fallback_map[$key])) {
+        $val = constant($fallback_map[$key]);
+        return is_bool($val) ? ($val ? '1' : '0') : (string)$val;
+    }
+
+    return $default;
+}
+
+function setting_set(string $key, string $value): void {
+    $pdo = getDB();
+    $tbl = DB_PREFIX . 'settings';
+    // 确保表存在
+    @$pdo->exec("CREATE TABLE IF NOT EXISTS `$tbl` (`key` VARCHAR(64) PRIMARY KEY, `value` TEXT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $stmt = $pdo->prepare("INSERT INTO `$tbl` (`key`, `value`) VALUES (:k, :v) ON DUPLICATE KEY UPDATE `value` = :v2");
+    $stmt->execute([':k' => $key, ':v' => $value, ':v2' => $value]);
+}
+
 // ——— 配置检测 ———
 function requireConfig(): void {
     if (!file_exists(__DIR__ . '/../config.php')) {

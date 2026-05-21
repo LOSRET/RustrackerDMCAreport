@@ -23,7 +23,7 @@ $token = '';
 if (preg_match('/^Bearer\s+(.+)$/i', $auth_header, $m)) {
     $token = $m[1];
 }
-if ($token !== RUSTRACKER_TOKEN || RUSTRACKER_TOKEN === '') {
+if ($token === '' || $token !== setting_get('rustracker_token')) {
     http_response_code(401);
     echo json_encode(['error' => '未授权']);
     exit;

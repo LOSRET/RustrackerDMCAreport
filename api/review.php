@@ -37,7 +37,7 @@ $token = '';
 if (preg_match('/^Bearer\s+(.+)$/i', $auth_header, $m)) {
     $token = $m[1];
 }
-if ($token !== RUSTRACKER_TOKEN || RUSTRACKER_TOKEN === '') {
+if ($token === '' || $token !== setting_get('rustracker_token')) {
     http_response_code(401);
     echo json_encode(['error' => '未授权']);
     exit;
@@ -83,19 +83,21 @@ try {
     }
 
     // 审核通过 → GET 查询 + POST 添加（可关闭自动推送）
-    $auto_push = defined('RUSTRACKER_AUTO_BLACKLIST') ? RUSTRACKER_AUTO_BLACKLIST : true;
+    $auto_push = setting_get('auto_blacklist', '1') === '1';
+    $api = setting_get('rustracker_api');
+    $tkn = setting_get('rustracker_token');
     $rustracker = null;
     $rustracker_fatal = false;
     if ($new_status === 'approved' && $auto_push && !empty($report['info_hash'])) {
         $hash = $report['info_hash'];
 
         // Step 1: GET 查询
-        $check = rustracker_check(RUSTRACKER_API, RUSTRACKER_TOKEN, $hash);
+        $check = rustracker_check($api, $tkn, $hash);
         if ($check['success'] && $check['blacklisted']) {
             $rustracker = ['action' => 'skipped', 'reason' => 'already_blacklisted', 'check' => $check];
         } elseif ($check['success'] && !$check['blacklisted']) {
             // Step 2: POST 添加
-            $push = rustracker_push(RUSTRACKER_API, RUSTRACKER_TOKEN, $hash);
+            $push = rustracker_push($api, $tkn, $hash);
             $rustracker = ['action' => 'pushed', 'push' => $push, 'check' => $check];
             if (!$push['success']) $rustracker_fatal = true;
         } else {
