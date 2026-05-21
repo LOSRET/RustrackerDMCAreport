@@ -40,6 +40,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($work === '')  $errors[] = '请描述您的原始作品';
         if ($hash !== '' && !preg_match('/^[a-fA-F0-9]{40}$/', $hash)) $errors[] = 'Info Hash 格式不正确（应为 40 位十六进制字符）';
 
+        // DMCA 声明确认
+        if (empty($_POST['affirm_goodfaith']))  $errors[] = '请确认善意声明（Good Faith Belief）';
+        if (empty($_POST['affirm_accuracy']))   $errors[] = '请确认信息准确性声明';
+        if (empty($_POST['affirm_authority']))  $errors[] = '请确认权利人授权声明';
+
         if (empty($errors)) {
             try {
                 $pdo = getDB();
@@ -148,6 +153,21 @@ show_form:
             <div class="form-group">
                 <label class="form-label" for="description">补充说明</label>
                 <textarea id="description" name="description" class="form-textarea"><?php echo h($_POST['description'] ?? ''); ?></textarea>
+            </div>
+
+            <div class="dmca-affirm">
+                <label class="form-checkbox">
+                    <input type="checkbox" name="affirm_goodfaith" value="1" required>
+                    <span>我善意地相信，上述侵权材料的使用未经版权所有者、其代理人或法律的授权。</span>
+                </label>
+                <label class="form-checkbox">
+                    <input type="checkbox" name="affirm_accuracy" value="1" required>
+                    <span>本通知中的信息准确无误。本人愿承担作伪证的法律责任，并声明本人是已声明被侵犯的专有权所有者授权的代表。</span>
+                </label>
+                <label class="form-checkbox">
+                    <input type="checkbox" name="affirm_authority" value="1" required>
+                    <span>我了解，故意作出虚假陈述可能需承担法律责任（包括损害赔偿和诉讼费用）。</span>
+                </label>
             </div>
 
             <button type="submit" class="btn btn-primary btn-block form-submit-row">提交举报</button>
