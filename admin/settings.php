@@ -52,8 +52,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $msg_type = 'error';
         }
 
-    } elseif (isset($_POST['test'])) {
-        // 测试连接 — 使用指定测试 hash
+    } elseif (isset($_POST['test_get'])) {
+        // 测试 GET 查询（只读，安全）
+        $api   = trim($_POST['rustracker_api'] ?? '');
+        $token = trim($_POST['rustracker_token'] ?? '');
+        $test_hash = '1111111111111111111111111111111111111111';
+
+        $check = rustracker_check($api, $token, $test_hash);
+
+        if ($check['success']) {
+            $status = $check['blacklisted'] ? '已拉黑' : '未拉黑';
+            $test_result = "GET 查询成功 — HTTP 200 | {$status}\nInfo Hash: {$test_hash}\n"
+                         . "（此操作为只读，无任何副作用）";
+        } else {
+            $test_result = "GET 查询失败 — HTTP {$check['http_code']}\n{$check['error']}";
+            if ($check['response']) {
+                $test_result .= "\n响应：{$check['response']}";
+            }
+        }
+
+    } elseif (isset($_POST['test_post'])) {
+        // 测试 POST 添加（会写入 blacklist 文件）
         $api   = trim($_POST['rustracker_api'] ?? '');
         $token = trim($_POST['rustracker_token'] ?? '');
         $test_hash = '1111111111111111111111111111111111111111';
@@ -61,12 +80,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $push = rustracker_push($api, $token, $test_hash);
 
         if ($push['success']) {
-            $status = $push['added'] ? '新增成功' : '该 hash 已存在（也算成功）';
-            $test_result = "连接成功 — HTTP 200 | {$status}\nInfo Hash: {$test_hash}\n"
+            $status = $push['added'] ? '新增成功' : '该 hash 已存在';
+            $test_result = "POST 添加成功 — HTTP 200 | {$status}\nInfo Hash: {$test_hash}\n"
                          . "注意：此测试 hash 已被写入 Rustracker blacklist 文件。\n"
                          . "测试完成后，请在 Rustracker blacklist 文件中删除此行：\n{$test_hash}";
         } else {
-            $test_result = '连接失败 — HTTP ' . $push['http_code'] . "\n" . $push['error'];
+            $test_result = "POST 添加失败 — HTTP {$push['http_code']}\n{$push['error']}";
             if ($push['response']) {
                 $test_result .= "\n响应：{$push['response']}";
             }
@@ -116,10 +135,10 @@ $form_token = $_POST['rustracker_token'] ?? $current_token;
         </div>
         <?php endif; ?>
 
-        <div class="card" style="max-width:640px;">
+        <div class="card card-narrow">
 
             <h2 class="mb-16">Rustracker 黑名单 API</h2>
-            <p class="text-sm mb-24">审核通过举报后，系统将调用此接口推送 Info Hash 至 Rustracker 黑名单。</p>
+            <p class="text-sm mb-24">审核通过举报后，系统将先 GET 查询是否已拉黑，再 POST 添加。GET 只读无副作用，POST 会写入 blacklist 文件。</p>
 
             <form method="post">
                 <input type="hidden" name="csrf_token" value="<?php echo h($csrf); ?>">
@@ -129,7 +148,7 @@ $form_token = $_POST['rustracker_token'] ?? $current_token;
                     <input type="url" id="rustracker_api" name="rustracker_api" class="form-input"
                            value="<?php echo h($form_api); ?>"
                            placeholder="http://localhost:3000/api/blacklist">
-                    <p class="form-hint">Rustracker 的 POST /api/blacklist 端点地址</p>
+                    <p class="form-hint">两个接口共用同一 URL：GET ?info_hash= 查询，POST 添加</p>
                 </div>
 
                 <div class="form-group">
@@ -140,9 +159,10 @@ $form_token = $_POST['rustracker_token'] ?? $current_token;
                     <p class="form-hint">对应 Rustracker 的 RUSTRACKER_ADMIN_TOKEN</p>
                 </div>
 
-                <div style="display:flex;gap:12px;">
+                <div class="btn-row">
                     <button type="submit" name="save" class="btn btn-primary">保存设置</button>
-                    <button type="submit" name="test" class="btn btn-outline">测试连接</button>
+                    <button type="submit" name="test_get" class="btn btn-outline">测试 GET 查询（只读）</button>
+                    <button type="submit" name="test_post" class="btn btn-outline">测试 POST 添加</button>
                 </div>
             </form>
 

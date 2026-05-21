@@ -36,8 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['id'
         $note = trim($_POST['admin_note'] ?? '');
         $new_status = $action === 'approve' ? 'approved' : 'rejected';
 
-        // 审核通过时，推送到 Rustracker
         $rustracker_result = '';
+        $rustracker_fatal = false;
+
+        // 审核通过 → 先 GET 查询，再 POST 添加
         if ($new_status === 'approved') {
             $pdo = getDB();
             $stmt = $pdo->prepare("SELECT info_hash FROM `$table` WHERE id = :id");
@@ -45,25 +47,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['id'
             $row = $stmt->fetch();
 
             if ($row && !empty($row['info_hash'])) {
-                $push = rustracker_push(RUSTRACKER_API, RUSTRACKER_TOKEN, $row['info_hash']);
-                if ($push['success']) {
-                    $rustracker_result = $push['added']
-                        ? '已推送至 Rustracker 黑名单'
-                        : '该 Info Hash 已在 Rustracker 黑名单中';
+                $hash = $row['info_hash'];
+
+                // Step 1: GET 查询是否已在黑名单
+                $check = rustracker_check(RUSTRACKER_API, RUSTRACKER_TOKEN, $hash);
+
+                if ($check['success'] && $check['blacklisted']) {
+                    // 已在黑名单，无需 POST
+                    $rustracker_result = '该 Info Hash 已在 Rustracker 黑名单中，跳过添加。';
+                } elseif ($check['success'] && !$check['blacklisted']) {
+                    // Step 2: 不在黑名单，POST 添加
+                    $push = rustracker_push(RUSTRACKER_API, RUSTRACKER_TOKEN, $hash);
+                    if ($push['success']) {
+                        $rustracker_result = $push['added']
+                            ? '已推送至 Rustracker 黑名单'
+                            : '该 Info Hash 已在 Rustracker 黑名单中（并发添加）';
+                    } else {
+                        $rustracker_result = 'Rustracker POST 添加失败：' . $push['error'];
+                        $rustracker_fatal = true;
+                    }
                 } else {
-                    $rustracker_result = 'Rustracker 推送失败：' . $push['error'];
+                    // GET 查询失败
+                    $rustracker_result = 'Rustracker GET 查询失败：' . $check['error'];
+                    $rustracker_fatal = true;
                 }
             }
         }
 
-        $pdo = getDB();
-        $stmt = $pdo->prepare("UPDATE `$table` SET status = :s, admin_note = :n WHERE id = :id");
-        $stmt->execute([':s' => $new_status, ':n' => $note, ':id' => $id]);
-
-        $labels = ['approved' => '已通过', 'rejected' => '已驳回'];
-        $message = "举报 #{$id} 已标记为「{$labels[$new_status]}」。";
-        if ($rustracker_result) $message .= ' ' . $rustracker_result;
-        $msg_type = $new_status === 'approved' ? 'success' : 'info';
+        // Rustracker 致命错误时不更新状态，保持 pending 等重试
+        if (!$rustracker_fatal) {
+            $pdo = getDB();
+            $stmt = $pdo->prepare("UPDATE `$table` SET status = :s, admin_note = :n WHERE id = :id");
+            $stmt->execute([':s' => $new_status, ':n' => $note, ':id' => $id]);
+            $labels = ['approved' => '已通过', 'rejected' => '已驳回'];
+            $message = "举报 #{$id} 已标记为「{$labels[$new_status]}」。";
+            if ($rustracker_result) $message .= ' ' . $rustracker_result;
+            $msg_type = $new_status === 'approved' ? 'success' : 'info';
+        } else {
+            $message = "举报 #{$id} 处理失败：{$rustracker_result}。状态未变更，请检查 Rustracker 配置后重试。";
+            $msg_type = 'error';
+        }
 
     } elseif ($action === 'reopen') {
         $pdo = getDB();

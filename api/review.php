@@ -82,10 +82,37 @@ try {
         exit;
     }
 
-    // 审核通过 → 推送 Rustracker
+    // 审核通过 → GET 查询 + POST 添加
     $rustracker = null;
+    $rustracker_fatal = false;
     if ($new_status === 'approved' && !empty($report['info_hash'])) {
-        $rustracker = rustracker_push(RUSTRACKER_API, RUSTRACKER_TOKEN, $report['info_hash']);
+        $hash = $report['info_hash'];
+
+        // Step 1: GET 查询
+        $check = rustracker_check(RUSTRACKER_API, RUSTRACKER_TOKEN, $hash);
+        if ($check['success'] && $check['blacklisted']) {
+            $rustracker = ['action' => 'skipped', 'reason' => 'already_blacklisted', 'check' => $check];
+        } elseif ($check['success'] && !$check['blacklisted']) {
+            // Step 2: POST 添加
+            $push = rustracker_push(RUSTRACKER_API, RUSTRACKER_TOKEN, $hash);
+            $rustracker = ['action' => 'pushed', 'push' => $push, 'check' => $check];
+            if (!$push['success']) $rustracker_fatal = true;
+        } else {
+            $rustracker = ['action' => 'check_failed', 'check' => $check];
+            $rustracker_fatal = true;
+        }
+    }
+
+    // Rustracker 致命错误时不更新状态
+    if ($rustracker_fatal) {
+        http_response_code(502);
+        echo json_encode([
+            'success'    => false,
+            'error'      => 'Rustracker 操作失败，状态未变更',
+            'id'         => $id,
+            'rustracker' => $rustracker,
+        ]);
+        exit;
     }
 
     $stmt = $pdo->prepare("UPDATE `$tbl` SET status = :s, admin_note = :n WHERE id = :id");

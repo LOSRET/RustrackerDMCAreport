@@ -140,3 +140,75 @@ function rustracker_push(string $api_url, string $token, string $info_hash): arr
 
     return $result;
 }
+
+// ——— Rustracker Blacklist GET 查询（只读，无副作用）———
+function rustracker_check(string $api_url, string $token, string $info_hash): array {
+    $result = [
+        'success'     => false,
+        'blacklisted' => false,
+        'http_code'   => 0,
+        'error'       => null,
+        'response'    => '',
+    ];
+
+    if ($api_url === '' || $token === '') {
+        $result['error'] = 'Rustracker API 地址或 Token 未配置';
+        return $result;
+    }
+
+    if (!function_exists('curl_init')) {
+        $result['error'] = 'curl 扩展未安装';
+        return $result;
+    }
+
+    $url = $api_url . '?info_hash=' . urlencode($info_hash);
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL            => $url,
+        CURLOPT_HTTPGET        => true,
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $token,
+        ],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_CONNECTTIMEOUT => 5,
+    ]);
+    $body = curl_exec($ch);
+    $result['http_code'] = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_error = curl_error($ch);
+    curl_close($ch);
+
+    $result['response'] = $body;
+
+    if ($curl_error) {
+        $result['error'] = '连接失败：' . $curl_error;
+        return $result;
+    }
+
+    switch ($result['http_code']) {
+        case 200:
+            $data = json_decode($body, true);
+            if ($data && ($data['ok'] ?? false) === true) {
+                $result['success']     = true;
+                $result['blacklisted'] = $data['blacklisted'] ?? false;
+                $result['error']       = null;
+            } else {
+                $result['error'] = 'Rustracker 返回异常：'
+                    . (is_array($data) ? ($data['error'] ?? '未知错误') : substr($body, 0, 200));
+            }
+            break;
+        case 400:
+            $result['error'] = 'info_hash 格式错误（需为 40 位十六进制）';
+            break;
+        case 401:
+            $result['error'] = 'Rustracker Token 缺失或错误（Unauthorized）';
+            break;
+        case 503:
+            $result['error'] = 'Rustracker 未配置 admin token';
+            break;
+        default:
+            $result['error'] = 'Rustracker 返回 HTTP ' . $result['http_code'] . '：' . substr($body, 0, 200);
+    }
+
+    return $result;
+}

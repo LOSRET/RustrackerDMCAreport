@@ -91,6 +91,9 @@ h2 { font-size: 18px; font-weight: 600; color: #1E293B; line-height: 1.4; }
 
 .btn-sm    { padding: 6px 12px; font-size: 13px; }
 .btn-block { display: block; width: 100%; }
+.btn-row   { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.card-narrow { max-width: 640px; }
 
 /* Loading spinner for buttons */
 .btn-loading { position: relative; color: transparent !important; pointer-events: none; }
