@@ -97,6 +97,16 @@ h2 { font-size: 18px; font-weight: 600; color: #1E293B; line-height: 1.4; }
     flex-shrink: 0; margin-top: 2px;
 }
 
+.radio-group { display: flex; flex-direction: column; gap: 8px; }
+.form-radio {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px; color: #1E293B; cursor: pointer;
+}
+.form-radio input[type="radio"] {
+    width: 16px; height: 16px; accent-color: #2563EB; cursor: pointer;
+    flex-shrink: 0;
+}
+
 .dmca-affirm {
     margin: 24px 0 8px; padding: 16px 20px;
     background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 4px;

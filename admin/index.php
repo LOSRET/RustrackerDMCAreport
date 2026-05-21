@@ -203,6 +203,12 @@ if ($is_ajax):
             data-infringing_url="<?php echo h($r['infringing_url']); ?>"
             data-info_hash="<?php echo h($r['info_hash']); ?>"
             data-description="<?php echo h($r['description']); ?>"
+            data-address="<?php echo h($r['address'] ?? ''); ?>"
+            data-phone="<?php echo h($r['phone'] ?? ''); ?>"
+            data-role="<?php echo h($r['role'] ?? 'owner'); ?>"
+            data-role_label="<?php echo ($r['role'] ?? 'owner') === 'representative' ? '授权代表' : '版权所有者'; ?>"
+            data-infringing_location="<?php echo h($r['infringing_location'] ?? ''); ?>"
+            data-signature_name="<?php echo h($r['signature_name'] ?? ''); ?>"
             data-status="<?php echo h($r['status']); ?>"
             data-status_label="<?php
                 $labels = ['pending' => '待审核', 'approved' => '已通过', 'rejected' => '已驳回', 'deleted' => '已删除'];

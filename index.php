@@ -32,28 +32,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $url     = trim($_POST['infringing_url'] ?? '');
         $hash    = trim($_POST['info_hash'] ?? '');
         $desc    = trim($_POST['description'] ?? '');
+        $address = trim($_POST['address'] ?? '');
+        $role    = trim($_POST['role'] ?? '');
+        $inf_loc = trim($_POST['infringing_location'] ?? '');
+        $phone   = trim($_POST['phone'] ?? '');
+        $sig_ok  = !empty($_POST['signature_consent']) ? 1 : 0;
+        $sig_name = trim($_POST['signature_name'] ?? '');
 
-        if ($name === '')  $errors[] = 'name';
-        if ($email === '') $errors[] = 'email';
+        if ($name === '')    $errors[] = 'name';
+        if ($email === '')   $errors[] = 'email';
         if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'email_fmt';
-        if ($work === '')  $errors[] = 'work';
+        if ($work === '')    $errors[] = 'work';
+        if ($address === '') $errors[] = 'address';
+        if (!in_array($role, ['owner', 'representative'])) $errors[] = 'role';
         if ($hash !== '' && !preg_match('/^[a-fA-F0-9]{40}$/', $hash)) $errors[] = 'hash';
 
         if (empty($_POST['affirm_goodfaith']))  $errors[] = 'affirm_goodfaith';
         if (empty($_POST['affirm_accuracy']))   $errors[] = 'affirm_accuracy';
         if (empty($_POST['affirm_authority']))  $errors[] = 'affirm_authority';
 
+        if (!$sig_ok)     $errors[] = 'signature_consent';
+        if ($sig_name === '') $errors[] = 'signature_name';
+
         if (empty($errors)) {
             try {
                 $pdo = getDB();
                 $tbl = DB_PREFIX . 'dmca_reports';
+                // 自动迁移：确保新列存在
+                @$pdo->exec("ALTER TABLE `$tbl`
+                    ADD COLUMN IF NOT EXISTS address VARCHAR(255) NOT NULL DEFAULT '',
+                    ADD COLUMN IF NOT EXISTS phone VARCHAR(50) NULL,
+                    ADD COLUMN IF NOT EXISTS role ENUM('owner','representative') NOT NULL DEFAULT 'owner',
+                    ADD COLUMN IF NOT EXISTS infringing_location TEXT NULL,
+                    ADD COLUMN IF NOT EXISTS signature_consent TINYINT(1) NOT NULL DEFAULT 0,
+                    ADD COLUMN IF NOT EXISTS signature_name VARCHAR(100) NOT NULL DEFAULT ''");
                 $stmt = $pdo->prepare(
-                    "INSERT INTO `$tbl` (reporter_name, reporter_email, company_name, original_work, infringing_url, info_hash, description)
-                     VALUES (:n, :e, :c, :w, :u, :h, :d)"
+                    "INSERT INTO `$tbl` (reporter_name, reporter_email, company_name, original_work, infringing_url, infringing_location, info_hash, description, address, phone, role, signature_consent, signature_name)
+                     VALUES (:n, :e, :c, :w, :u, :il, :h, :d, :addr, :ph, :role, :sc, :sn)"
                 );
                 $stmt->execute([
                     ':n' => $name, ':e' => $email, ':c' => $company,
-                    ':w' => $work, ':u' => $url,   ':h' => $hash, ':d' => $desc,
+                    ':w' => $work, ':u' => $url,   ':il' => $inf_loc,
+                    ':h' => $hash, ':d' => $desc,  ':addr' => $address,
+                    ':ph' => $phone, ':role' => $role,
+                    ':sc' => $sig_ok, ':sn' => $sig_name,
                 ]);
 
                 rate_limit_increment('dmca_submit');
@@ -74,9 +96,12 @@ $err_map = [
     'csrf' => 'error.csrf', 'rate' => 'error.rate',
     'name' => 'error.name', 'email' => 'error.email', 'email_fmt' => 'error.email_fmt',
     'work' => 'error.work', 'hash' => 'error.hash',
+    'address' => 'error.address', 'role' => 'error.role',
     'affirm_goodfaith' => 'error.affirm_goodfaith',
     'affirm_accuracy' => 'error.affirm_accuracy',
     'affirm_authority' => 'error.affirm_authority',
+    'signature_consent' => 'error.signature_consent',
+    'signature_name' => 'error.signature_name',
     'server' => 'error.server',
 ];
 ?><!DOCTYPE html>
@@ -148,6 +173,25 @@ $err_map = [
                        value="<?php echo h($_POST['company_name'] ?? ''); ?>">
             </div>
             <div class="form-group">
+                <label class="form-label" for="address" data-i18n="form.label_address">联系地址</label>
+                <input type="text" id="address" name="address" class="form-input" required
+                       value="<?php echo h($_POST['address'] ?? ''); ?>"
+                       placeholder="街道 / 城市 / 国家">
+            </div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="form.label_role">举报人身份</label>
+                <div class="radio-group">
+                    <label class="form-radio">
+                        <input type="radio" name="role" value="owner" <?php echo ($_POST['role'] ?? '') === 'owner' ? 'checked' : ''; ?> required>
+                        <span data-i18n="form.role_owner">本人即版权所有者</span>
+                    </label>
+                    <label class="form-radio">
+                        <input type="radio" name="role" value="representative" <?php echo ($_POST['role'] ?? '') === 'representative' ? 'checked' : ''; ?>>
+                        <span data-i18n="form.role_rep">本人是版权所有者的授权代表</span>
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="form-label" for="original_work" data-i18n="form.label_work">原始作品描述</label>
                 <textarea id="original_work" name="original_work" class="form-textarea" required
                           ><?php echo h($_POST['original_work'] ?? ''); ?></textarea>
@@ -159,6 +203,11 @@ $err_map = [
                        value="<?php echo h($_POST['infringing_url'] ?? ''); ?>" placeholder="https://...">
             </div>
             <div class="form-group">
+                <label class="form-label" for="infringing_location" data-i18n="form.label_infringing_location">侵权内容具体位置</label>
+                <textarea id="infringing_location" name="infringing_location" class="form-textarea"><?php echo h($_POST['infringing_location'] ?? ''); ?></textarea>
+                <p class="form-hint" data-i18n="form.hint_infringing_location">例如：具体 URL 路径、文件名、或 torrent 内文件列表（选填）</p>
+            </div>
+            <div class="form-group">
                 <label class="form-label" for="info_hash" data-i18n="form.label_hash">Info Hash（40 位十六进制）</label>
                 <input type="text" id="info_hash" name="info_hash" class="form-input"
                        value="<?php echo h($_POST['info_hash'] ?? ''); ?>"
@@ -168,6 +217,12 @@ $err_map = [
             <div class="form-group">
                 <label class="form-label" for="description" data-i18n="form.label_desc">补充说明</label>
                 <textarea id="description" name="description" class="form-textarea"><?php echo h($_POST['description'] ?? ''); ?></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="phone" data-i18n="form.label_phone">联系电话</label>
+                <input type="text" id="phone" name="phone" class="form-input"
+                       value="<?php echo h($_POST['phone'] ?? ''); ?>" placeholder="+86 138-0000-0000">
+                <p class="form-hint" data-i18n="form.hint_phone">选填，仅在需要时用于联系</p>
             </div>
 
             <div class="dmca-affirm">
@@ -183,6 +238,18 @@ $err_map = [
                     <input type="checkbox" name="affirm_authority" value="1" required>
                     <span data-i18n="affirm.authority">我了解，故意作出虚假陈述可能需承担法律责任（包括损害赔偿和诉讼费用）。</span>
                 </label>
+            </div>
+
+            <div class="dmca-affirm">
+                <label class="form-checkbox">
+                    <input type="checkbox" id="signature_consent" name="signature_consent" value="1" required>
+                    <span data-i18n="signature.consent">本人声明上述信息真实准确，并在此进行电子签名确认。输入姓名即视为正式签名，具有法律效力。</span>
+                </label>
+                <div class="mt-12">
+                    <input type="text" id="signature_name" name="signature_name" class="form-input" required
+                           value="<?php echo h($_POST['signature_name'] ?? ''); ?>"
+                           placeholder="在此输入您的全名作为电子签名">
+                </div>
             </div>
 
             <button type="submit" class="btn btn-primary btn-block form-submit-row" data-i18n="form.submit">提交举报</button>
