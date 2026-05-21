@@ -39,11 +39,20 @@ h2 { font-size: 18px; font-weight: 600; color: #1E293B; line-height: 1.4; }
     font-size: 15px; font-weight: 700; color: #2563EB; text-decoration: none;
 }
 .topnav-brand:hover { color: #1D4ED8; text-decoration: none; }
+.topnav-right { display: flex; align-items: center; gap: 12px; }
 .topnav-link {
     font-size: 13px; font-weight: 500; color: #64748B; text-decoration: none;
     transition: color 0.15s ease;
 }
 .topnav-link:hover { color: #1E293B; text-decoration: none; }
+
+.lang-switch {
+    font-size: 12px; font-weight: 500; font-family: inherit;
+    color: #2563EB; background: #EFF6FF; border: 1px solid #BFDBFE;
+    border-radius: 3px; padding: 3px 10px; cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+.lang-switch:hover { background: #DBEAFE; }
 
 @media (max-width: 768px) {
     .topnav-inner { padding: 0 16px; }
