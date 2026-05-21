@@ -88,6 +88,7 @@ function rustracker_push(string $api_url, string $token, string $info_hash): arr
         CURLOPT_HTTPHEADER     => [
             'Authorization: Bearer ' . $token,
             'Content-Type: application/json',
+            'User-Agent: DMCA-Panel/1.0',
         ],
         CURLOPT_POSTFIELDS     => json_encode(['info_hash' => $info_hash]),
         CURLOPT_RETURNTRANSFER => true,
@@ -168,6 +169,7 @@ function rustracker_check(string $api_url, string $token, string $info_hash): ar
         CURLOPT_HTTPGET        => true,
         CURLOPT_HTTPHEADER     => [
             'Authorization: Bearer ' . $token,
+            'User-Agent: DMCA-Panel/1.0',
         ],
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 10,
