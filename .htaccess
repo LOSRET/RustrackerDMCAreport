@@ -1,0 +1,18 @@
+# DMCA Panel — Apache 配置
+# 将 install.php 设为目录索引（首次访问自动引导安装）
+
+DirectoryIndex index.php install.php
+
+# 阻止直接访问配置文件
+<FilesMatch "^config\.php$">
+    Require all denied
+</FilesMatch>
+
+# 阻止访问 schema.sql
+<FilesMatch "^schema\.sql$">
+    Require all denied
+</FilesMatch>
+
+# 阻止访问 .git 目录
+RewriteEngine On
+RewriteRule ^\.git - [F,L]

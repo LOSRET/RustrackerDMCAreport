@@ -1,0 +1,11 @@
+# 配置文件（包含密码，每次部署独立生成）
+config.php
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
