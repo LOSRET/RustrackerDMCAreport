@@ -292,6 +292,7 @@ endif; // end AJAX-only output
         <a href="index.php" class="sidebar-brand">DMCA Panel</a>
         <ul class="sidebar-nav">
             <li><a href="index.php" class="active">举报列表</a></li>
+            <li><a href="settings.php">Tracker 设置</a></li>
             <li><a href="logout.php">退出登录</a></li>
         </ul>
     </aside>
