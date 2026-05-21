@@ -52,6 +52,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step === 1) {
             }
             $pdo->exec($schema);
 
+            // 检查是否已有数据
+            $tbl = ($_SESSION['db_prefix'] ?? '') . 'dmca_reports';
+            try {
+                $cnt = $pdo->query("SELECT COUNT(*) FROM `$tbl`")->fetchColumn();
+                if ($cnt > 0) {
+                    $_SESSION['existing_data'] = (int)$cnt;
+                }
+            } catch (PDOException $e) {
+                // 表不存在时才抛异常，忽略
+            }
+
             header('Location: install.php?step=2');
             exit;
         } catch (PDOException $e) {
@@ -164,6 +175,10 @@ function h($s) { echo htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 
         <?php if ($db_error): ?>
         <div class="alert alert-error"><?php h($db_error); ?></div>
+        <?php endif; ?>
+
+        <?php if (!empty($_SESSION['existing_data'])): ?>
+        <div class="alert alert-info">检测到数据库中已有 <strong><?php echo (int)$_SESSION['existing_data']; ?></strong> 条举报记录。安装将保留现有数据，仅重新生成配置文件。</div>
         <?php endif; ?>
 
         <?php if ($step === 1): ?>
