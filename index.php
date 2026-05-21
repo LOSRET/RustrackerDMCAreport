@@ -77,6 +77,13 @@ show_form:
 
 <div class="brand-bar"></div>
 
+<nav class="topnav">
+    <div class="topnav-inner">
+        <a href="index.php" class="topnav-brand">DMCA Panel</a>
+        <a href="admin/login.php" class="topnav-link">管理员登录</a>
+    </div>
+</nav>
+
 <div class="page-header">
     <div class="container">
         <h1>DMCA 版权侵权举报</h1>
@@ -148,9 +155,6 @@ show_form:
 
     </div>
 
-    <p class="text-sm text-center mt-16">
-        <a href="admin/login.php">管理员登录</a>
-    </p>
 </div>
 
 </body>
