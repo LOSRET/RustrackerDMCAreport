@@ -123,20 +123,28 @@
        Reject form toggle
        ============================================================ */
     function toggleReject(id) {
-        var el = document.getElementById('reject-form-' + id);
-        if (el) {
-            // Close all other open reject forms first
-            document.querySelectorAll('.reject-form.open').forEach(function (f) {
-                if (f.id !== 'reject-form-' + id) f.classList.remove('open');
-            });
-            el.classList.add('open');
-            var textarea = el.querySelector('textarea');
+        // Close all other open reject rows first
+        document.querySelectorAll('.reject-row.open').forEach(function (row) {
+            if (row.id !== 'reject-row-' + id) {
+                row.classList.remove('open');
+                var f = row.querySelector('.reject-form');
+                if (f) f.classList.remove('open');
+            }
+        });
+        var row = document.getElementById('reject-row-' + id);
+        var form = document.getElementById('reject-form-' + id);
+        if (row && form) {
+            row.classList.add('open');
+            form.classList.add('open');
+            var textarea = form.querySelector('textarea');
             if (textarea) textarea.focus();
         }
     }
     function cancelReject(id) {
-        var el = document.getElementById('reject-form-' + id);
-        if (el) el.classList.remove('open');
+        var row = document.getElementById('reject-row-' + id);
+        var form = document.getElementById('reject-form-' + id);
+        if (row) row.classList.remove('open');
+        if (form) form.classList.remove('open');
     }
 
     /* ============================================================

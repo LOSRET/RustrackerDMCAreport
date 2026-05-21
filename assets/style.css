@@ -208,11 +208,13 @@ td.actions { white-space: nowrap; }
 td.actions .btn + .btn,
 td.actions form + form { margin-left: 8px; }
 
+tr.reject-row { display: none; }
+tr.reject-row.open { display: table-row; }
 tr.reject-row td {
     padding: 0 16px 16px; border-bottom: 1px solid #E2E8F0;
     background: #FEF2F2;
 }
-.reject-form { display: none; padding: 0; margin: 0; }
+.reject-form { padding: 0; margin: 0; }
 .reject-form.open { display: block; }
 .reject-form .form-group { margin-bottom: 10px; }
 .reject-form textarea {
