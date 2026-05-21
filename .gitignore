@@ -1,6 +1,9 @@
 # 配置文件（包含密码，每次部署独立生成）
 config.php
 
+# Claude Code 本地配置
+.claude/
+
 # IDE
 .vscode/
 .idea/
