@@ -28,12 +28,12 @@ h2 { font-size: 18px; font-weight: 600; color: #1E293B; line-height: 1.4; }
 
 /* ——— Top nav ——— */
 .topnav {
-    background: #FFFFFF; border-bottom: 1px solid #E2E8F0;
+    width: 100%; background: #FFFFFF; border-bottom: 1px solid #E2E8F0;
     height: 48px; display: flex; align-items: center;
 }
 .topnav-inner {
     max-width: 1100px; width: 100%; margin: 0 auto;
-    padding: 0 32px; display: flex; justify-content: space-between; align-items: center;
+    padding: 0 24px; display: flex; justify-content: space-between; align-items: center;
 }
 .topnav-brand {
     font-size: 15px; font-weight: 700; color: #2563EB; text-decoration: none;
@@ -44,6 +44,10 @@ h2 { font-size: 18px; font-weight: 600; color: #1E293B; line-height: 1.4; }
     transition: color 0.15s ease;
 }
 .topnav-link:hover { color: #1E293B; text-decoration: none; }
+
+@media (max-width: 768px) {
+    .topnav-inner { padding: 0 16px; }
+}
 
 /* ——— Card ——— */
 .card {

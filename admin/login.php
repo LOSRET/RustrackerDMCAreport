@@ -63,9 +63,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
+<div class="brand-bar"></div>
+
+<nav class="topnav">
+    <div class="topnav-inner">
+        <a href="../index.php" class="topnav-brand">DMCA Panel</a>
+        <span class="topnav-link">管理员登录</span>
+    </div>
+</nav>
+
 <div class="login-wrap">
 <div class="login-card">
-    <div class="brand-bar"></div>
     <div class="card">
 
         <h2 class="login-title">管理员登录</h2>
